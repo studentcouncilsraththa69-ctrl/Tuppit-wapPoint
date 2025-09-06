@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการคะแนนขวดน้ำ - โรงเรียนทัพพระยาพิทยา</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-placeholder {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+        }
+
+        .school-name {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+        }
+
+        .page {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .page.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(45deg, #48dbfb, #0abde3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(72, 219, 251, 0.3);
+            transform: scale(1.02);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #48dbfb, #0abde3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #26de81, #20bf6b);
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 50px auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .login-title {
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .my-score-card {
+            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .my-score-number {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .leaderboard {
+            margin-top: 30px;
+        }
+
+        .rank-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border-left: 5px solid transparent;
+        }
+
+        .rank-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .rank-item.rank-1 {
+            background: linear-gradient(135deg, #ffd700 20%, rgba(255, 215, 0, 0.2) 100%);
+            border-left-color: #ffd700;
+        }
+
+        .rank-item.rank-2 {
+            background: linear-gradient(135deg, #c0c0c0 20%, rgba(192, 192, 192, 0.2) 100%);
+            border-left-color: #c0c0c0;
+        }
+
+        .rank-item.rank-3 {
+            background: linear-gradient(135deg, #cd7f32 20%, rgba(205, 127, 50, 0.2) 100%);
+            border-left-color: #cd7f32;
+        }
+
+        .rank-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-right: 20px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .rank-info {
+            flex: 1;
+            color: white;
+        }
+
+        .rank-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #feca57;
+        }
+
+        .classroom-selector {
+            margin-bottom: 20px;
+        }
+
+        .classroom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .classroom-btn {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .classroom-btn.active {
+            background: linear-gradient(45deg, #48dbfb, #0abde3);
+        }
+
+        .classroom-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .score-management-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .score-input-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .score-input-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .score-input-item input {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .score-input-item .student-id {
+            max-width: 120px;
+        }
+
+        .score-input-item .score-amount {
+            max-width: 100px;
+        }
+
+        .exchange-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .exchange-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .exchange-info {
+            color: white;
+            flex: 1;
+        }
+
+        .exchange-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .school-name {
+                font-size: 24px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            .score-input-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .score-input-item input {
+                margin-bottom: 8px;
+            }
+
+            .classroom-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo-placeholder">🏫</div>
+            <div class="school-name">โรงเรียนทัพพระยาพิทยา</div>
+            <div class="subtitle">ระบบจัดการคะแนนขวดน้ำ</div>
+        </div>
+
+        <!-- Login Page -->
+        <div class="page active" id="loginPage">
+            <div class="login-form">
+                <h2 class="login-title">เข้าสู่ระบบ</h2>
+                <div class="form-group">
+                    <label>ชื่อผู้ใช้</label>
+                    <input type="text" class="form-control" id="username" placeholder="กรุณาใส่ชื่อผู้ใช้">
+                </div>
+                <div class="form-group">
+                    <label>รหัสผ่าน</label>
+                    <input type="password" class="form-control" id="password" placeholder="กรุณาใส่รหัสผ่าน">
+                </div>
+                <div class="form-group">
+                    <label>ประเภทผู้ใช้</label>
+                    <select class="form-control" id="userType">
+                        <option value="student">นักเรียน</option>
+                        <option value="council">สภานักเรียน (แอดมิน)</option>
+                    </select>
+                </div>
+                <button class="btn" style="width: 100%;" onclick="login()">เข้าสู่ระบบ</button>
+            </div>
+        </div>
+
+        <!-- Student System -->
+        <div class="page" id="studentSystem">
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showStudentPage('myScore')">📊 คะแนนของฉัน</button>
+                <button class="nav-btn" onclick="showStudentPage('exchange')">🔄 แลกคะแนน</button>
+                <button class="nav-btn" onclick="showStudentPage('leaderboard')">🏆 อันดับคะแนน</button>
+                <button class="nav-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+            </div>
+
+            <!-- My Score Page -->
+            <div class="page active" id="myScorePage">
+                <div class="my-score-card">
+                    <h2>คะแนนของคุณ</h2>
+                    <div class="my-score-number" id="myScoreNumber">0</div>
+                    <p>คะแนนขวดน้ำ</p>
+                </div>
+            </div>
+
+            <!-- Student Exchange Page -->
+            <div class="page" id="studentExchangePage">
+                <h2 style="color: white; text-align: center; margin-bottom: 20px;">🔄 แลกคะแนนขวดน้ำ</h2>
+                
+                <div class="my-score-card">
+                    <h3>คะแนนปัจจุบัน</h3>
+                    <div class="my-score-number" id="exchangeScoreNumber">0</div>
+                    <p>คะแนนขวดน้ำ</p>
+                </div>
+
+                <div class="form-group">
+                    <label>คะแนนที่ต้องการแลก</label>
+                    <input type="number" class="form-control" id="exchangeAmount" placeholder="กรุณาใส่จำนวนคะแนนที่ต้องการแลก" min="1">
+                </div>
+                
+                <button class="btn btn-success" style="width: 100%;" onclick="requestExchange()">ส่งคำขอแลกคะแนน</button>
+                
+                <h3 style="color: white; margin: 30px 0 15px 0;">ประวัติการแลกคะแนน</h3>
+                <div class="exchange-list" id="studentExchangeHistory">
+                    <!-- Exchange history will be populated here -->
+                </div>
+            </div>
+
+            <!-- Leaderboard Page -->
+            <div class="page" id="leaderboardPage">
+                <h2 style="color: white; text-align: center; margin-bottom: 30px;">🏆 อันดับคะแนนสูงสุด</h2>
+                
+                <div class="classroom-grid">
+                    <button class="classroom-btn active" onclick="filterLeaderboard('all')">ทั้งหมด</button>
+                    <button class="classroom-btn" onclick="filterLeaderboard('ม.1')">ม.1</button>
+                    <button class="classroom-btn" onclick="filterLeaderboard('ม.2')">ม.2</button>
+                    <button class="classroom-btn" onclick="filterLeaderboard('ม.3')">ม.3</button>
+                </div>
+
+                <div class="leaderboard" id="leaderboardList">
+                    <!-- Leaderboard will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Council System -->
+        <div class="page" id="councilSystem">
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showCouncilPage('addScore')">➕ เพิ่มคะแนน</button>
+                <button class="nav-btn" onclick="showCouncilPage('removeScore')">➖ หักคะแนน</button>
+                <button class="nav-btn" onclick="showCouncilPage('manageExchange')">📋 จัดการคำขอแลก</button>
+                <button class="nav-btn" onclick="showCouncilPage('scoreHistory')">📋 ประวัติการหักคะแนน</button>
+                <button class="nav-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+            </div>
+
+            <!-- Add Score Page -->
+            <div class="page active" id="addScorePage">
+                <h2 style="color: white; text-align: center; margin-bottom: 20px;">➕ เพิ่มคะแนนนักเรียน</h2>
+                
+                <div class="score-management-section">
+                    <h3 style="color: white; margin-bottom: 15px;">เลือกห้องเรียน</h3>
+                    <div class="classroom-grid">
+                        <button class="classroom-btn" onclick="selectClassroomForAdd('ม.1/1')">ม.1/1</button>
+                        <button class="classroom-btn" onclick="selectClassroomForAdd('ม.1/2')">ม.1/2</button>
+                        <button class="classroom-btn" onclick="selectClassroomForAdd('ม.2/1')">ม.2/1</button>
+                        <button class="classroom-btn" onclick="selectClassroomForAdd('ม.2/2')">ม.2/2</button>
+                        <button class="classroom-btn" onclick="selectClassroomForAdd('ม.3/1')">ม.3/1</button>
+                        <button class="classroom-btn" onclick="selectClassroomForAdd('ม.3/2')">ม.3/2</button>
+                        <button class="classroom-btn" onclick="selectClassroomForAdd('manual')">ใส่รหัสเอง</button>
+                    </div>
+                </div>
+
+                <div class="score-input-list" id="addScoreInputList">
+                    <div class="score-input-item">
+                        <input type="text" placeholder="รหัสนักเรียน" class="student-id" onchange="findStudentName(this, 'add')">
+                        <input type="text" placeholder="ชื่อ-นามสกุล" class="student-name" readonly>
+                        <input type="number" placeholder="คะแนน" class="score-amount" min="1">
+                        <button class="btn btn-danger btn-small" onclick="removeScoreInput(this)">ลบ</button>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0; display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn" onclick="addScoreInput('add')">เพิ่มรายการ</button>
+                    <button class="btn btn-success" onclick="confirmAddScores()">ยืนยันเพิ่มคะแนน</button>
+                </div>
+            </div>
+
+            <!-- Remove Score Page -->
+            <div class="page" id="removeScorePage">
+                <h2 style="color: white; text-align: center; margin-bottom: 20px;">➖ หักคะแนนนักเรียน</h2>
+                
+                <div class="score-management-section">
+                    <h3 style="color: white; margin-bottom: 15px;">เลือกห้องเรียน</h3>
+                    <div class="classroom-grid">
+                        <button class="classroom-btn" onclick="selectClassroomForRemove('ม.1/1')">ม.1/1</button>
+                        <button class="classroom-btn" onclick="selectClassroomForRemove('ม.1/2')">ม.1/2</button>
+                        <button class="classroom-btn" onclick="selectClassroomForRemove('ม.2/1')">ม.2/1</button>
+                        <button class="classroom-btn" onclick="selectClassroomForRemove('ม.2/2')">ม.2/2</button>
+                        <button class="classroom-btn" onclick="selectClassroomForRemove('ม.3/1')">ม.3/1</button>
+                        <button class="classroom-btn" onclick="selectClassroomForRemove('ม.3/2')">ม.3/2</button>
+                        <button class="classroom-btn" onclick="selectClassroomForRemove('manual')">ใส่รหัสเอง</button>
+                    </div>
+                </div>
+
+                <div class="score-input-list" id="removeScoreInputList">
+                    <div class="score-input-item">
+                        <input type="text" placeholder="รหัสนักเรียน" class="student-id" onchange="findStudentName(this, 'remove')">
+                        <input type="text" placeholder="ชื่อ-นามสกุล" class="student-name" readonly>
+                        <input type="number" placeholder="คะแนนที่หัก" class="score-amount" min="1">
+                        <button class="btn btn-danger btn-small" onclick="removeScoreInput(this)">ลบ</button>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0; display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn" onclick="addScoreInput('remove')">เพิ่มรายการ</button>
+                    <button class="btn btn-danger" onclick="confirmRemoveScores()">
